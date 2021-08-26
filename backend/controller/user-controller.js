@@ -1,5 +1,6 @@
 import { response } from "express";
 import user from "../model/user-Schema.js";
+import history from "../model/user-history.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import request from 'request';
@@ -60,7 +61,7 @@ export const login = async (req, res) => {
                     const data = JSON.parse(body)
                     console.log(body);
                 })
-                res.json({ message: "user Signin Successfully", token: token, date: userLogin.date });
+                res.json({ message: "user Signin Successfully", token: token, date: userLogin.date , email : userLogin.email});
             }
         } else {
             console.log("9");
@@ -70,5 +71,46 @@ export const login = async (req, res) => {
     } catch (err) {
         console.log("10");
         console.log(err);
+    }
+}
+
+
+export const weatherCity = async(req , res)=>{
+    console.log("weather app");
+    console.log(req.query);
+    const {city , email}=req.query
+    console.log(city , email);
+    try{
+        console.log("try");
+        const url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=a25864b6917859e23269883fe62334a8`;
+                request(url, (error, response, body) => {
+                    const data = JSON.parse(body)
+                    console.log(data);
+                    
+                    res.status(200).json(data.weather)
+                })
+                console.log("hhhhhhhhhhh");
+                const History = new history({ email , city});
+                await History.save();
+                console.log("eeeeeeeeeee")
+    }catch(err){
+        console.log("err");
+    }
+}
+
+export const current= async(req , res)=>{
+    console.log(req.query);
+    const {lat , log }=req.query
+    console.log("asf", lat , log)
+
+    try{
+        const url = `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${log}&appid=a25864b6917859e23269883fe62334a8`;
+        request(url, (error, response, body) => {
+            const data = JSON.parse(body)
+            console.log("currte",data);
+            res.status(200).json(data.weather)
+        })
+    }catch(err){
+        console.log("err");
     }
 }
