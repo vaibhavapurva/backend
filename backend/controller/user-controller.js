@@ -86,7 +86,6 @@ export const weatherCity = async(req , res)=>{
                 request(url, (error, response, body) => {
                     const data = JSON.parse(body)
                     console.log(data);
-                    
                     res.status(200).json(data.weather)
                 })
                 console.log("hhhhhhhhhhh");
