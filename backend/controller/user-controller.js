@@ -1,6 +1,7 @@
 import { response } from "express";
 import user from "../model/user-Schema.js";
 import history from "../model/user-history.js";
+import log from "../model/log-schema.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import request from 'request';
@@ -56,12 +57,9 @@ export const login = async (req, res) => {
                 console.log(User)
                 console.log("date2")
                 await User.update();
-                const url = "http://api.openweathermap.org/data/2.5/weather?q=pune&appid=a25864b6917859e23269883fe62334a8";
-                request(url, (error, response, body) => {
-                    const data = JSON.parse(body)
-                    console.log(body);
-                })
-                res.json({ message: "user Signin Successfully", token: token, date: userLogin.date , email : userLogin.email});
+                const Log = new log({ email, date });
+                await Log.save();
+                res.json({ message: "user Signin Successfully", token: token, date: userLogin.date, email: userLogin.email });
             }
         } else {
             console.log("9");
@@ -75,41 +73,58 @@ export const login = async (req, res) => {
 }
 
 
-export const weatherCity = async(req , res)=>{
+export const weatherCity = async(req, res) => {
     console.log("weather app");
     console.log(req.query);
-    const {city , email}=req.query
-    console.log(city , email);
-    try{
+    const { city, email } = req.query
+    console.log(city, email);
+    try {
         console.log("try");
         const url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=a25864b6917859e23269883fe62334a8`;
-                request(url, (error, response, body) => {
-                    const data = JSON.parse(body)
-                    console.log(data);
-                    res.status(200).json(data.weather)
-                })
-                console.log("hhhhhhhhhhh");
-                const History = new history({ email , city});
-                await History.save();
-                console.log("eeeeeeeeeee")
-    }catch(err){
+        request(url, async (error, response, body) => {
+            const data = JSON.parse(body)
+            console.log(data);
+            const weather = data.weather
+            console.log(weather)
+            res.status(200).json(data.weather)
+            console.log("hhhhhhhhhhh");
+            const date = new Date().toLocaleString();
+            console.log(date)
+            const History = new history({ email, city, date, weather });
+            const a = await History.save();
+            console.log("eeeeeeeeeee")
+        })
+
+    } catch (err) {
         console.log("err");
     }
 }
 
-export const current= async(req , res)=>{
+export const current = async (req, res) => {
     console.log(req.query);
-    const {lat , log }=req.query
-    console.log("asf", lat , log)
-
-    try{
+    const { lat, log } = req.query
+    try {
         const url = `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${log}&appid=a25864b6917859e23269883fe62334a8`;
         request(url, (error, response, body) => {
             const data = JSON.parse(body)
-            console.log("currte",data);
+            console.log("currte", data);
             res.status(200).json(data.weather)
         })
-    }catch(err){
+    } catch (err) {
         console.log("err");
+    }
+}
+
+export const historyGet = async (req, res) => {
+    console.log("history")
+    const email = req.params.email;
+    console.log(email)
+    try {
+        console.log("try")
+        const data = await history.find({ email: email });
+        console.log(data);
+        res.status(200).json(data);
+    } catch (err) {
+        console.log("err")
     }
 }
